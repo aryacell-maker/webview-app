@@ -1,0 +1,57 @@
+package com.example.webviewapp;
+
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
+public class MainActivity extends AppCompatActivity {
+
+    private WebView webView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        webView = new WebView(this);
+        
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setDatabaseEnabled(true);
+        
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(true);
+        webSettings.setDisplayZoomControls(false);
+        
+        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
+        
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
+        
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
+            }
+        });
+        
+        webView.loadUrl("file:///android_asset/html/index.html");
+        
+        setContentView(webView);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+          }
