@@ -1,17 +1,738 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="theme-color" content="#6200EE">
-    <title>WebView App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>nexotis forum</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  font-family:"JetBrains Mono",monospace;
+  -webkit-tap-highlight-color:transparent;
+}
+html,body{
+  width:100%;height:100%;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% -15%, rgba(255,255,255,.06), transparent 50%),
+    #000;
+  color:#e8e8e8;
+  overflow:hidden;
+}
+
+  /* ===== PROTEKSI HALAMAN ===== */
+
+/* Tidak bisa memilih / menyalin teks */
+html,
+body,
+.app{
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+
+/* Jangan izinkan drag elemen */
+a,
+button,
+img,
+i,
+span{
+  -webkit-user-drag:none;
+  user-drag:none;
+}
+
+/* Link tidak bisa di-select */
+a{
+  -webkit-user-select:none;
+  user-select:none;
+}
+  
+.app{
+  width:100%;
+  max-width:430px;
+  height:100dvh;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+
+/* TOPBAR */
+.topbar{
+  flex-shrink:0;
+  padding:14px 16px 0;
+  background:linear-gradient(180deg, rgba(0,0,0,.98), rgba(0,0,0,.88));
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  z-index:20;
+}
+.topbar-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.brand{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  color:#fff;
+}
+.brand span{color:rgba(255,255,255,.45);}
+
+/* FEED */
+.feed{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:10px 14px 16px;
+}
+.feed-pane{display:none;}
+.feed-pane.show{display:block;}
+
+.empty{
+  margin-top:48px;
+  text-align:center;
+  color:rgba(255,255,255,.4);
+}
+.empty i{font-size:42px;opacity:.45;display:block;margin-bottom:12px;}
+.empty p{font-size:12px;line-height:1.7;}
+
+/* ===== CARA KERJANYA ===== */
+.howto{
+  width:100%;
+  max-width:430px;
+  margin:16px auto 0;
+  padding:0 10px 16px;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#fff;
+}
+.howto-card{
+  width:100%;
+  background:#17181a;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:22px;
+  padding:18px 16px 20px;
+  box-sizing:border-box;
+}
+.howto-win{
+  width:100%;
+  background:#121314;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px 14px 16px;
+  margin-bottom:16px;
+  box-sizing:border-box;
+}
+.howto-dots{
+  display:flex;
+  gap:6px;
+  margin-bottom:0;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.howto-dots span{
+  width:9px;height:9px;
+  border-radius:50%;
+  background:#3a3a3e;
+  display:inline-block;
+}
+.howto-dots span.on{
+  background:#2ad46a;
+  box-shadow:0 0 8px rgba(42,212,106,.45);
+}
+.howto-url{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:8px;
+  min-height:42px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#1c1d20;
+  border:1px solid rgba(255,255,255,.06);
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+.howto-url{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#1c1d20;
+  border:1px solid rgba(255,255,255,.06);
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+.howto-url .cursor{
+  margin-left:-2px;
+  margin-right:-2px;
+  color:#2ad46a;
+  text-shadow:
+    0 0 6px rgba(42,212,106,.9),
+    0 0 12px rgba(42,212,106,.45);
+  animation:cursorBlink .7s steps(1) infinite;
+}
+.howto-url .bright{
+  color:#f3f3f3;
+  white-space:nowrap;
+}
+.howto-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.howto-list li{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  color:rgba(255,255,255,.72);
+  font-size:14.5px;
+  line-height:1.5;
+}
+.howto-list i{
+  flex-shrink:0;
+  margin-top:2px;
+  font-size:18px;
+  color:rgba(255,255,255,.55);
+}
+
+/* ===== WHY ===== */
+.nxf-why{
+  width:100%;
+  margin:0;
+  padding:4px 6px 20px;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color:#fff;
+}
+.nxf-why-head{
+  width:100%;
+  margin:0 0 14px;
+}
+.nxf-why-green{
+  margin:0 0 6px;
+  color:#2ad46a;
+  font-size:15px;
+  line-height:1.35;
+  font-weight:600;
+  letter-spacing:-.2px;
+}
+.nxf-why-head h2{
+  margin:0;
+  color:#f4f4f4;
+  font-size:25px;
+  line-height:1.25;
+  font-weight:800;
+  letter-spacing:-.5px;
+}
+.nxf-why-list{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.nxf-why-card{
+  width:100%;
+  min-height:94px;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025), 0 8px 24px rgba(0,0,0,.18);
+  overflow:hidden;
+  position:relative;
+}
+.nxf-why-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:14px;
+  bottom:14px;
+  width:2px;
+  border-radius:2px;
+  opacity:.7;
+}
+.nxf-why-icon{
+  width:50px;
+  height:50px;
+  min-width:50px;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.08);
+  color:#2ad46a;
+  font-size:24px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035), 0 5px 15px rgba(0,0,0,.2);
+}
+.nxf-why-content{flex:1;min-width:0;}
+.nxf-why-content h3{
+  margin:0 0 5px;
+  color:#f4f4f4;
+  font-size:14px;
+  line-height:1.35;
+  font-weight:800;
+  letter-spacing:-.2px;
+}
+.nxf-why-content p{
+  margin:0;
+  color:rgba(255,255,255,.48);
+  font-size:11px;
+  line-height:1.55;
+  font-weight:400;
+}
+.nxf-why-card:active{
+  transform:scale(.985);
+  background:rgba(255,255,255,.065);
+}
+
+@media (max-width:360px){
+  .nxf-why{padding-left:4px;padding-right:4px;}
+  .nxf-why-card{padding:13px;gap:12px;}
+  .nxf-why-icon{
+    width:46px;min-width:46px;height:46px;
+    border-radius:14px;font-size:22px;
+  }
+  .nxf-why-head h2{font-size:23px;}
+}
+
+.auth-actions{
+  width:100%;
+  max-width:430px;
+  margin:4px auto 18px;
+  padding:0 10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  box-sizing:border-box;
+}
+
+.btn-masuk,
+.btn-register{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:100%;
+  height:48px;
+  border-radius:17px;
+  font-family:"JetBrains Mono",monospace;
+  font-size:14px;
+  font-weight:600;
+  text-decoration:none;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  box-sizing:border-box;
+  }
+
+.btn-masuk i,
+.btn-register i{
+  font-size:18px;
+  line-height:1;
+}
+  
+/* hijau — Masuk */
+.btn-masuk{
+  border:none;
+  background:#2ad46a;
+  color:#0a160f;
+  font-weight:700;
+}
+.btn-masuk:active{ background:#26c060; }
+
+/* abu transparan — Register */
+.btn-register{
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.82);
+}
+.btn-register:active{
+  background:rgba(255,255,255,.1);
+  border-color:rgba(255,255,255,.18);
+}
+
+.offer-card{
+  width:100%;
+  max-width:400px;
+  margin:14px auto 0;
+  padding:18px 16px 16px;
+  box-sizing:border-box;
+  border-radius:30px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 28px rgba(0,0,0,.35);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  position:relative;
+  overflow:hidden;
+}
+
+/* garis hijau tipis di atas (gaya orange di gambar) */
+.offer-card::before{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  top:0;
+  height:2px;
+  border-radius:0 0 2px 2px;
+  background:linear-gradient(90deg, transparent, #2ad46a, transparent);
+  opacity:.9;
+}
+
+.offer-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(42,212,106,.12);
+  border:1px solid rgba(42,212,106,.35);
+  color:#2ad46a;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.2;
+  margin-bottom:12px;
+}
+.offer-badge i{
+  font-size:15px;
+  line-height:1;
+}
+
+.offer-title{
+  margin:0 0 8px;
+  color:#f4f4f4;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-.3px;
+  line-height:1.25;
+}
+
+.offer-sub{
+  margin:0;
+  color:rgba(255,255,255,.48);
+  font-size:13.5px;
+  line-height:1.45;
+  font-weight:400;
+  }
+
+ .howto-url .bright .g{
+  color:#2ad46a;
+  text-shadow:
+    0 0 6px rgba(42,212,106,.85),
+    0 0 14px rgba(42,212,106,.45),
+    0 0 22px rgba(42,212,106,.25);
+  font-weight:700;
+ }
+
+.howto-url .cursor{
+  color:#2ad46a;
+  text-shadow:
+    0 0 6px rgba(42,212,106,.9),
+    0 0 12px rgba(42,212,106,.45);
+  animation:cursorBlink .7s steps(1) infinite;
+}
+
+@keyframes cursorBlink{
+  50%{
+    opacity:0;
+  }
+}
+</style>
 </head>
 <body>
-    <div style="padding: 20px; font-family: sans-serif; text-align: center;">
-        <h1>🚀 WebView App Template</h1>
-        <p>Your Android WebView app is ready!</p>
-        <p>Ini adalah hasil build mentah.</p>
-        <button onclick="alert('Berhasil!')">Test Button</button>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="brand">NEXO<span>FORUM</span></div>
     </div>
+  </header>
+
+  <main class="feed">
+    <section class="feed-pane show" id="pane-foryou">
+
+<div class="offer-card">
+  <div class="offer-badge">
+    <i class="ri-time-line"></i>
+    <span>Ruang diskusi terbuka & aman</span>
+  </div>
+  <h3 class="offer-title">Forum chat gratis untuk semua</h3>
+  <p class="offer-sub">
+    Berbagi ide, topik, dan percakapan dengan nyaman — tanpa biaya, tanpa ribet.
+  </p>
+</div>
+      
+      <section class="howto">
+        <div class="nxf-why-head">
+          <h2>Cara kerja!</h2>
+        </div>
+        <div class="howto-card">
+          <div class="howto-win">
+            <div class="howto-dots">
+              <span></span><span></span><span class="on"></span>
+            </div>
+            <div class="howto-url">
+              <span class="bright" id="howtoAnim"></span>
+            </div>
+          </div>
+          <ul class="howto-list">
+            <li>
+              <i class="ri-send-plane-fill"></i>
+              <span>Forum terbuka seperti situs biasa: postingan, media, riwayat. Tanpa ribet.</span>
+            </li>
+            <li>
+              <i class="ri-bar-chart-2-fill"></i>
+              <span>Di sampingnya — aktivitas, jangkauan, dan seberapa aktif komunitas berjalan.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+        <div class="nxf-why-head">
+          <h2>Ingin Bergabung?</h2>
+        </div>
+      
+<div class="auth-actions">
+  <a href="flogin.html" class="btn-masuk">
+    <i class="ri-wireless-charging-line"></i>
+    <span>Masuk</span>
+  </a>
+
+  <a href="fregister.html" class="btn-register">
+    <i class="ri-edit-line"></i>
+    <span>Register</span>
+  </a>
+</div>
+      
+      <section class="nxf-why">
+        <div class="nxf-why-head">
+          <div class="nxf-why-green">Mengapa harus pilih kami?</div>
+          <h2>Karena!</h2>
+        </div>
+        <div class="nxf-why-list">
+          <div class="nxf-why-card">
+            <div class="nxf-why-icon"><i class="ri-wireless-charging-line"></i></div>
+            <div class="nxf-why-content">
+              <h3>Terhubung dengan mudah</h3>
+              <p>Temukan orang dan topik yang sesuai tanpa proses yang rumit.</p>
+            </div>
+          </div>
+          <div class="nxf-why-card">
+            <div class="nxf-why-icon"><i class="ri-chat-3-line"></i></div>
+            <div class="nxf-why-content">
+              <h3>Ruang untuk berbagi</h3>
+              <p>Bagikan ide, pengalaman, dan informasi bersama komunitas.</p>
+            </div>
+          </div>
+          <div class="nxf-why-card">
+            <div class="nxf-why-icon"><i class="ri-shield-check-line"></i></div>
+            <div class="nxf-why-content">
+              <h3>Nyaman dan terarah</h3>
+              <p>Forum dibuat sederhana agar kamu bisa fokus pada hal yang penting.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </section>
+
+    <section class="feed-pane" id="pane-following">
+      <div class="empty">
+        <i class="ri-user-follow-line"></i>
+        <p>Belum ada post dari akun yang kamu follow.<br>Follow seseorang untuk mengisi tab ini.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  
+/* ===== PROTEKSI HALAMAN ===== */
+
+document.addEventListener("contextmenu", function(e){
+  e.preventDefault();
+});
+
+document.addEventListener("selectstart", function(e){
+  e.preventDefault();
+});
+
+document.addEventListener("dragstart", function(e){
+  e.preventDefault();
+});
+
+/* Blokir copy */
+document.addEventListener("copy", function(e){
+  e.preventDefault();
+});
+
+/* Blokir cut */
+document.addEventListener("cut", function(e){
+  e.preventDefault();
+});
+
+/* Blokir paste dari halaman */
+document.addEventListener("paste", function(e){
+  e.preventDefault();
+});
+
+/* Blokir long-press pada link agar tidak mudah muncul menu link */
+document.addEventListener("touchstart", function(e){
+  if(e.target.closest("a")){
+    e.target.closest("a").style.webkitTouchCallout = "none";
+  }
+}, {passive:true});
+  
+(function () {
+  var tabs = document.getElementById("feedTabs");
+  if (!tabs) return;
+  var buttons = tabs.querySelectorAll(".tab");
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-tab");
+      tabs.setAttribute("data-active", id);
+      buttons.forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+      document.getElementById("pane-foryou").classList.toggle("show", id === "foryou");
+      document.getElementById("pane-following").classList.toggle("show", id === "following");
+    });
+  });
+})();
+
+(function () {
+  var el = document.getElementById("howtoAnim");
+  if (!el) return;
+
+  el.innerHTML = `
+    <span>t.</span><span id="animI"></span><span class="cursor">|</span><span>.me/baileysf</span>
+  `;
+
+  var iEl = document.getElementById("animI");
+
+  function typeI() {
+    iEl.innerHTML = '<span class="g">i</span>';
+  }
+
+  function removeI() {
+    iEl.innerHTML = "";
+  }
+
+  function cycle() {
+    typeI();
+
+    // tunggu 3 kedipan kursor
+    setTimeout(function () {
+      removeI();
+
+      // jeda sebentar
+      setTimeout(function () {
+        // ketik i kembali
+        typeI();
+
+        // ulangi
+        cycle();
+      }, 300);
+
+    }, 2100);
+  }
+
+  cycle();
+})();
+
+(function () {
+  var field = document.getElementById("tgField");
+  var input = document.getElementById("tgInput");
+  var ph = document.getElementById("tgPh");
+  var btn = document.getElementById("tgBtn");
+  if (!field || !input || !ph || !btn) return;
+
+  var list = ["@Lyora", "@indah", "@astraAI"];
+  var i = 0, n = 0, del = false, stop = false, t;
+
+  function loop() {
+    if (stop) return;
+    var w = list[i];
+    if (!del) {
+      n++;
+      ph.textContent = w.slice(0, n);
+      if (n >= w.length) {
+        del = true;
+        t = setTimeout(loop, 1100);
+        return;
+      }
+      t = setTimeout(loop, 85);
+    } else {
+      n--;
+      ph.textContent = w.slice(0, n);
+      if (n <= 0) {
+        del = false;
+        i = (i + 1) % list.length;
+        t = setTimeout(loop, 350);
+        return;
+      }
+      t = setTimeout(loop, 40);
+    }
+  }
+  function pause() {
+    stop = true;
+    if (t) clearTimeout(t);
+  }
+  function resume() {
+    if (input.value) return;
+    stop = false;
+    field.classList.remove("is-active");
+    loop();
+  }
+
+  input.addEventListener("focus", function () {
+    field.classList.add("is-active");
+    pause();
+  });
+  input.addEventListener("blur", function () {
+    if (!input.value) resume();
+    else field.classList.add("is-active");
+  });
+  input.addEventListener("input", function () {
+    if (input.value) {
+      field.classList.add("is-active");
+      pause();
+    } else if (document.activeElement !== input) resume();
+  });
+  btn.addEventListener("click", function () {
+    var q = input.value.trim();
+    if (!q) { input.focus(); return; }
+    console.log("cari:", q);
+  });
+  document.querySelectorAll(".tgme-chip").forEach(function (c) {
+    c.addEventListener("click", function () {
+      input.value = c.getAttribute("data-q") || "";
+      field.classList.add("is-active");
+      pause();
+      input.focus();
+    });
+  });
+  loop();
+})();
+</script>
 </body>
 </html>
