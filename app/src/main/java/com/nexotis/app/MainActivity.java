@@ -75,47 +75,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ================== DECRYPT & LOAD ==================
-    private void loadEncryptedPage(String pageName) {
-        try {
-            String fileName = "html/" + pageName + ".ox";
-            InputStream is = getAssets().open(fileName);
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] data = new byte[4096];
-            int n;
-            while ((n = is.read(data)) != -1) {
-                buffer.write(data, 0, n);
-            }
-            is.close();
+    // ================== DECRYPT & LOAD ==================
+private void loadEncryptedPage(String pageName) {
+    try {
+        String fileName = "html/" + pageName + ".ox";
+        InputStream is = getAssets().open(fileName);
 
-            byte[] encrypted = buffer.toByteArray();
-            String html = decrypt(encrypted);
-
-            webView.loadDataWithBaseURL(
-                "file:///android_asset/html/",
-                html,
-                "text/html",
-                "UTF-8",
-                null
-            );
-        } catch (Exception e) {
-            webView.loadData(
-                "<h2 style='color:red;padding:20px'>Error load page: " + pageName + "</h2>" +
-                "<p>" + e.getMessage() + "</p>",
-                "text/html", "UTF-8"
-            );
+        // Baca sebagai teks (Base64)
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int n;
+        while ((n = is.read(data)) != -1) {
+            buffer.write(data, 0, n);
         }
+        is.close();
+
+        String b64 = new String(buffer.toByteArray(), "UTF-8").trim();
+        byte[] encrypted = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+
+        String html = decrypt(encrypted);
+
+        webView.loadDataWithBaseURL(
+            "file:///android_asset/html/",
+            html,
+            "text/html",
+            "UTF-8",
+            null
+        );
+    } catch (Exception e) {
+        webView.loadData(
+            "<h2 style='color:red;padding:20px'>Error load page: " + pageName + "</h2>" +
+            "<p>" + e.getMessage() + "</p>",
+            "text/html", "UTF-8"
+        );
     }
+}
 
-    private String decrypt(byte[] encrypted) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "AES");
-        IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
+private String decrypt(byte[] encrypted) throws Exception {
+    SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "AES");
+    IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
 
-        byte[] decrypted = cipher.doFinal(encrypted);
-        return new String(decrypted, "UTF-8");
-    }
+    byte[] decrypted = cipher.doFinal(encrypted);
+    return new String(decrypted, "UTF-8");
+}
 
     // ================== BRIDGE DARI HTML ==================
     public class WebAppInterface {
