@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.nexotis.app'
+    namespace 'com.katrax.app'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.nexotis.app"
+        applicationId "com.katrax.app"
         minSdk 24
         targetSdk 34
         versionCode 1
