@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceedInstanceState);
+        super.onCreate(savedInstanceState);
 
         webView = new WebView(this);
 
@@ -145,3 +145,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     }
+    
