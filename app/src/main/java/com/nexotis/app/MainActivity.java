@@ -1,30 +1,30 @@
 package com.nexotis.app;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.webkit.JavascriptInterface;
+import android.util.Base64;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.InputStream;
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-
-    // Key & IV harus sama dengan yang dipakai saat encrypt (16 karakter)
-    private static final String SECRET_KEY = "NexotisKey123456";
-    private static final String IV = "NexotisIV1234567";
+    private String targetUrl = "https://google.com"; // fallback default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceedInstanceState);
 
         webView = new WebView(this);
 
@@ -38,23 +38,13 @@ public class MainActivity extends AppCompatActivity {
         ws.setAllowContentAccess(true);
         ws.setMediaPlaybackRequiresUserGesture(false);
         ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-
-        // Bridge agar HTML bisa panggil Java (untuk pindah halaman)
-        webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        ws.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("whatsapp://") || url.startsWith("tg://") ||
-                    url.startsWith("telegram://") || url.startsWith("instagram://") ||
-                    url.startsWith("tiktok://") || url.startsWith("youtube://") ||
-                    url.startsWith("fb://") || url.startsWith("twitter://") ||
-                    url.startsWith("intent://") ||
-                    url.contains("wa.me") || url.contains("t.me") ||
-                    url.contains("instagram.com") || url.contains("tiktok.com") ||
-                    url.contains("youtu.be") || url.contains("youtube.com") ||
-                    url.contains("facebook.com") || url.contains("twitter.com") ||
-                    url.contains("x.com")) {
+                // Buka aplikasi eksternal
+                if (isExternalApp(url)) {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                         return true;
@@ -66,69 +56,84 @@ public class MainActivity extends AppCompatActivity {
                 view.loadUrl(url);
                 return true;
             }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    loadOfflinePage();
+                }
+            }
         });
 
-        // Load halaman utama (index.ox)
-        loadEncryptedPage("index");
+        // Baca URL dari file INDAH
+        targetUrl = readUrlFromAssets();
+
+        // Cek koneksi
+        if (isOnline()) {
+            webView.loadUrl(targetUrl);
+        } else {
+            loadOfflinePage();
+        }
 
         setContentView(webView);
     }
 
-    // ================== DECRYPT & LOAD ==================
-    // ================== DECRYPT & LOAD ==================
-private void loadEncryptedPage(String pageName) {
-    try {
-        String fileName = "html/" + pageName + ".ox";
-        InputStream is = getAssets().open(fileName);
+    // ================== BACA FILE INDAH ==================
+    private String readUrlFromAssets() {
+        try {
+            InputStream is = getAssets().open("INDAH");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line.trim());
+            }
+            reader.close();
 
-        // Baca sebagai teks (Base64)
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        byte[] data = new byte[4096];
-        int n;
-        while ((n = is.read(data)) != -1) {
-            buffer.write(data, 0, n);
+            // Decode Base64
+            byte[] decoded = Base64.decode(sb.toString(), Base64.DEFAULT);
+            return new String(decoded, "UTF-8").trim();
+        } catch (Exception e) {
+            return "https://google.com"; // fallback
         }
-        is.close();
-
-        String b64 = new String(buffer.toByteArray(), "UTF-8").trim();
-        byte[] encrypted = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
-
-        String html = decrypt(encrypted);
-
-        webView.loadDataWithBaseURL(
-            "file:///android_asset/html/",
-            html,
-            "text/html",
-            "UTF-8",
-            null
-        );
-    } catch (Exception e) {
-        webView.loadData(
-            "<h2 style='color:red;padding:20px'>Error load page: " + pageName + "</h2>" +
-            "<p>" + e.getMessage() + "</p>",
-            "text/html", "UTF-8"
-        );
     }
-}
 
-private String decrypt(byte[] encrypted) throws Exception {
-    SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "AES");
-    IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes("UTF-8"));
-
-    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-
-    byte[] decrypted = cipher.doFinal(encrypted);
-    return new String(decrypted, "UTF-8");
-}
-
-    // ================== BRIDGE DARI HTML ==================
-    public class WebAppInterface {
-        @JavascriptInterface
-        public void openPage(String pageName) {
-            // Dipanggil dari HTML: Android.openPage('login')
-            runOnUiThread(() -> loadEncryptedPage(pageName));
+    // ================== CEK ONLINE ==================
+    private boolean isOnline() {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo net = cm.getActiveNetworkInfo();
+            return net != null && net.isConnected();
+        } catch (Exception e) {
+            return false;
         }
+    }
+
+    // ================== HALAMAN OFFLINE ==================
+    private void loadOfflinePage() {
+        webView.loadUrl("file:///android_asset/offline.html");
+    }
+
+    // ================== DETEKSI LINK APP ==================
+    private boolean isExternalApp(String url) {
+        return url.startsWith("whatsapp://") ||
+               url.startsWith("tg://") ||
+               url.startsWith("telegram://") ||
+               url.startsWith("instagram://") ||
+               url.startsWith("tiktok://") ||
+               url.startsWith("youtube://") ||
+               url.startsWith("fb://") ||
+               url.startsWith("twitter://") ||
+               url.startsWith("intent://") ||
+               url.contains("wa.me") ||
+               url.contains("t.me") ||
+               url.contains("instagram.com") ||
+               url.contains("tiktok.com") ||
+               url.contains("youtu.be") ||
+               url.contains("youtube.com") ||
+               url.contains("facebook.com") ||
+               url.contains("twitter.com") ||
+               url.contains("x.com");
     }
 
     @Override
@@ -139,4 +144,4 @@ private String decrypt(byte[] encrypted) throws Exception {
             super.onBackPressed();
         }
     }
-}
+    }
