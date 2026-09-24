@@ -66,14 +66,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Baca URL dari file INDAH
-        targetUrl = readUrlFromAssets();
+    
+         targetUrl = readUrlFromAssets();
 
-        // Cek koneksi
-        if (isOnline()) {
-            webView.loadUrl(targetUrl);
-        } else {
-            loadOfflinePage();
-        }
+       // Langsung coba load URL (lebih andal)
+        webView.loadUrl(targetUrl);
 
         setContentView(webView);
     }
